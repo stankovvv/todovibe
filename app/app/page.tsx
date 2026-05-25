@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
 
 interface Todo {
   id: number;
@@ -11,14 +14,25 @@ interface Todo {
 }
 
 export default function Home() {
+  const { isAuthenticated, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const router = useRouter();
   const [todos, setTodos] = useState<Todo[]>([]);
   const [newTodo, setNewTodo] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState('');
 
   useEffect(() => {
-    fetchTodos();
-  }, []);
+    if (!isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isAuthenticated, router]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchTodos();
+    }
+  }, [isAuthenticated]);
 
   const fetchTodos = async () => {
     const res = await fetch('/api/todos');
@@ -65,10 +79,22 @@ export default function Home() {
     setEditTitle('');
   };
 
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <div className="container">
       <div className="todo-app">
-        <h1>Todo App</h1>
+        <div className="header">
+          <h1>Todo App</h1>
+          <div className="header-actions">
+            <button className="btn-theme" onClick={toggleTheme} aria-label="Toggle theme">
+              {theme === 'light' ? '🌙' : '☀️'}
+            </button>
+            <button className="btn-logout" onClick={() => { logout(); router.push('/login'); }}>Logout</button>
+          </div>
+        </div>
         <form onSubmit={handleAdd} className="add-form">
           <input
             type="text"
