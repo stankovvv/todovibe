@@ -1,15 +1,15 @@
 export interface User {
+  id: number;
   username: string;
+  isAdmin: boolean;
 }
 
-const MOCK_USERS: Record<string, string> = {
-  admin: 'admin123',
-  user: 'password',
-};
-
-export function validateCredentials(username: string, password: string): User | null {
-  if (MOCK_USERS[username] && MOCK_USERS[username] === password) {
-    return { username };
-  }
-  return null;
+export async function validateCredentials(username: string, password: string): Promise<User | null> {
+  const res = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  });
+  if (!res.ok) return null;
+  return res.json();
 }

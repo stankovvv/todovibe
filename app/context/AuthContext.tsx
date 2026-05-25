@@ -6,7 +6,8 @@ import { validateCredentials, User } from '@/lib/auth';
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => boolean;
+  isAdmin: boolean;
+  login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -15,8 +16,8 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
-  const login = useCallback((username: string, password: string): boolean => {
-    const validated = validateCredentials(username, password);
+  const login = useCallback(async (username: string, password: string): Promise<boolean> => {
+    const validated = await validateCredentials(username, password);
     if (validated) {
       setUser(validated);
       return true;
@@ -29,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isAdmin: user?.isAdmin ?? false, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
